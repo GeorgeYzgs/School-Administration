@@ -11,12 +11,13 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 
 /**
- * @since 2/1/2020
+ * @since 25/1/2020
  * @author George.Giazitzis
  * @version 1.1
  */
 public abstract class SyntheticData {
 
+    //Class is not longer used for part B 
     //Synthetic courses.
     public static void setPremadeCourses() {
         Course.getListOfAllCourses().addAll(Arrays.asList(
@@ -29,7 +30,7 @@ public abstract class SyntheticData {
     //Synthetic trainers.
     public static void setPremadeTrainers() {
         Trainer.getListOfAllTrainers().addAll(Arrays.asList(
-                new Trainer("Michael", "Scott", "Java Object Oriented Programming"),
+                new Trainer("Michael", "Scott", "Java Programming"),
                 new Trainer("Andrew", "Bernard", "Introduction to C#"),
                 new Trainer("Dwight", "Schrute", "SQL Databases"),
                 new Trainer("Jim", "Halpert", "Front-end development"),
@@ -104,13 +105,13 @@ public abstract class SyntheticData {
                 new Assignment("SQL Databases", "Final Exam Part Time", 30, 100, LocalDateTime.of(2020, 5, 01, 23, 59, 59))));
         Course.getListOfAllCourses().get(0).getListOfCourseAssignments().addAll(Arrays.asList(
                 Assignment.getListOfAllAssignments().get(0),
-                Assignment.getListOfAllAssignments().get(4)));  
+                Assignment.getListOfAllAssignments().get(4)));
         Course.getListOfAllCourses().get(1).getListOfCourseAssignments().addAll(Arrays.asList(
                 Assignment.getListOfAllAssignments().get(1),
                 Assignment.getListOfAllAssignments().get(5)));
         Course.getListOfAllCourses().get(2).getListOfCourseAssignments().addAll(Arrays.asList(
                 Assignment.getListOfAllAssignments().get(2),
-                Assignment.getListOfAllAssignments().get(6))); 
+                Assignment.getListOfAllAssignments().get(6)));
         Course.getListOfAllCourses().get(3).getListOfCourseAssignments().addAll(Arrays.asList(
                 Assignment.getListOfAllAssignments().get(3),
                 Assignment.getListOfAllAssignments().get(7)));

@@ -5,12 +5,12 @@
  */
 package classes;
 
-import static classes.Method.sc;
+import api.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @since 2/1/2020
+ * @since 25/1/2020
  * @author George.Giazitzis
  * @version 1.1
  */
@@ -20,15 +20,21 @@ public class Trainer {
     private String lastName;
     private String subject;
     private static List<Trainer> listOfAllTrainers = new ArrayList();
+    private static int count = 0;
+    public final int ID;
 
     public Trainer(String firstName, String lastName, String subject) {
+        count++;
+        this.ID = count;
         this.firstName = firstName;
         this.lastName = lastName;
         this.subject = subject;
     }
 
     //Constructor with user input.
-    private Trainer() {
+    public Trainer() {
+        count++;
+        this.ID = count;
         setFirstName();
         setLastName();
         setSubject();
@@ -36,7 +42,7 @@ public class Trainer {
 
     @Override
     public String toString() {
-        return String.format("%-15s%-15s%-15s", firstName, lastName, subject);
+        return String.format("#%-15s%-15s%-15s%-15s", ID, firstName, lastName, subject);
     }
 
     //Getters & Setters
@@ -78,26 +84,6 @@ public class Trainer {
     }
 
     private void setSubject() {
-        System.out.println("Insert the subject this trainer teaches");
-        this.subject = sc.nextLine().trim();
-    }
-
-    //A method to create trainers, with user input.
-    public static void createTrainers() {
-        System.out.println("How many Trainers would you like to create?");
-        int input = Method.inputInteger(1, 10);
-        for (int i = 0; i < input; i++) {
-            System.out.println("Trainer: " + (i + 1));
-            listOfAllTrainers.add(new Trainer());
-            hireTrainer(listOfAllTrainers.get(i));
-        }
-    }
-
-    //A method to hire the trainer, after creation.
-    private static void hireTrainer(Trainer trainer) {
-        System.out.println("Choose the course(s) you would like to hire the trainer for");
-        Method.printListOfCourses(Course.getListOfAllCourses());
-        Course.getListOfAllCourses().get(Method.inputInteger(1, Course.getListOfAllCourses().size()) - 1).addTrainer(trainer);
-        Method.applyAgain(t -> hireTrainer(trainer));                           //Lambda with closure?
+        this.subject = Method.inputTitleString("trainer's subject");
     }
 }

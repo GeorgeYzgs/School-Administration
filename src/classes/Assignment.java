@@ -5,7 +5,7 @@
  */
 package classes;
 
-import static classes.Method.sc;
+import api.Method;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,20 +15,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @since 2/1/2020
+ * @since 25/1/2020
  * @author George.Giazitzis
  * @version 1.1
  */
 public class Assignment {
-    
+
     private String title;
     private String description;
     private LocalDateTime subDateTime;
     private int oralMark;
     private int totalMark;
     private static List<Assignment> listOfAllAssignments = new ArrayList();
-    
+    private static int count = 0;
+    public final int ID;
+
+    //Constructor to create synthetic data manually.
     public Assignment(String title, String description, int oralMark, int totalMark, LocalDateTime subDateTime) {
+        count++;
+        this.ID = count;
+        this.title = title;
+        this.description = description;
+        this.oralMark = oralMark;
+        this.totalMark = totalMark;
+        this.subDateTime = subDateTime;
+    }
+
+    //Constructor to create deep copies for course assignments, through database import wihtout having ID mismatch.
+    public Assignment(int ID, String title, String description, int oralMark, int totalMark, LocalDateTime subDateTime) {
+        this.ID = ID;
         this.title = title;
         this.description = description;
         this.oralMark = oralMark;
@@ -37,7 +52,9 @@ public class Assignment {
     }
 
     //Constructor with user input.
-    private Assignment() {
+    public Assignment() {
+        count++;
+        this.ID = count;
         setTitle();
         setDescription();
         setOralMark();
@@ -46,79 +63,79 @@ public class Assignment {
 
     //Constructor for deep copies from course assignments.
     public Assignment(Assignment assignment) {
+        this.ID = assignment.ID;
         this.title = assignment.title;
         this.description = assignment.description;
         this.oralMark = assignment.oralMark;
         setSubDateTime(assignment);
         setTotalMark(assignment);
     }
-    
+
     @Override
     public String toString() {
-        return String.format("%-25s%-25s%-15s%-15s%-15s", title, description, oralMark, totalMark, subDateTime);
+        return String.format("#%-15s%-25s%-25s%-15s%-15s%-15s", ID, title, description, oralMark, totalMark, subDateTime);
     }
 
     //Getters & Setters
     public String getTitle() {
         return title;
     }
-    
+
     public void setTitle(String title) {
         this.title = title;
     }
-    
+
     public String getDescription() {
         return description;
     }
-    
+
     public void setDescription(String description) {
         this.description = description;
     }
-    
+
     public LocalDateTime getSubDateTime() {
         return subDateTime;
     }
-    
+
     public void setSubDateTime(LocalDateTime subDateTime) {
         this.subDateTime = subDateTime;
     }
-    
-    public double getOralMark() {
+
+    public int getOralMark() {
         return oralMark;
     }
-    
+
     public void setOralMark(int oralMark) {
         this.oralMark = oralMark;
     }
-    
-    public double getTotalMark() {
+
+    public int getTotalMark() {
         return totalMark;
     }
-    
+
     public void setTotalMark(int totalMark) {
         this.totalMark = totalMark;
     }
-    
+
     public static List<Assignment> getListOfAllAssignments() {
         return listOfAllAssignments;
     }
 
     //Overloaded setters for assignment creation, with user input.
     private void setTitle() {
-        this.title = Method.inputString("assignments title");
+        this.title = Method.inputTitleString("assignment's title");
     }
-    
+
     private void setDescription() {
-        System.out.println("Insert the assignment's description");
-        this.description = sc.nextLine().trim();
+        this.description = Method.inputTitleString("assignment's description");
     }
-    
+
     private void setSubDateTime(Assignment assignment) {
         System.out.println("Insert the date that the student submitted their assignment (minimum date is set as 14 days before the final date of submission)");
         this.subDateTime = LocalDateTime.of(Method.inputLocalDate(assignment.subDateTime.toLocalDate().minusDays(14)), LocalTime.of(23, 59, 59));
     }
-    
-    public void setSubDateTime(LocalDate startDate, LocalDate endDate) {
+
+    protected void setSubDateTime(LocalDate startDate, LocalDate endDate) {
         System.out.println("Insert the assignment's date of submission, "
                 + "if your input date is a Saturday or Sunday then the submission date will be set to previous Friday");
         LocalDate date = Method.inputLocalDate(startDate, endDate);
@@ -127,12 +144,12 @@ public class Assignment {
         }
         this.subDateTime = LocalDateTime.of(date, LocalTime.of(23, 59, 59));
     }
-    
+
     private void setOralMark() {
         System.out.println("Insert the assignment's oral mark percentile of the total mark");
         this.oralMark = Method.inputInteger(10, 50);
     }
-    
+
     private void setTotalMark(Assignment assignment) {
         if (subDateTime.isAfter(assignment.subDateTime)) {
             System.out.println("The student submitted their assignment too late! Their grade will be set to 0");
@@ -142,25 +159,4 @@ public class Assignment {
             this.totalMark = Method.inputInteger(oralMark, 100);
         }
     }
-
-    //A method to create assignments, with user input.
-    public static void createAssignments() {
-        System.out.println("How many Assignments would you like to appoint?(A copy will be given to the students)");
-        int input = Method.inputInteger(1, 10);
-        for (int i = 0; i < input; i++) {
-            System.out.println("Assignment: " + (i + 1));
-            listOfAllAssignments.add(new Assignment());
-            appointCourseStudentAssignment(listOfAllAssignments.get(i));
-        }
-    }
-
-    //A method to appoint assignments to a course and its students, after creation.
-    private static void appointCourseStudentAssignment(Assignment assignment) {
-        System.out.println("Choose the course you would like to appoint this assignment to");
-        Method.printListOfCourses(Course.getListOfAllCourses());
-        int appoint = Method.inputInteger(1, Course.getListOfAllCourses().size());
-        Course.getListOfAllCourses().get(appoint - 1).addAssignment(assignment);
-        System.out.println("Lets set the dates that the students of this course submitted their assignments & their respective marks\n");    
-        Course.getListOfAllCourses().get(appoint - 1).getListOfCourseStudents().forEach(s -> s.addAssignment(assignment));
-    }    
 }

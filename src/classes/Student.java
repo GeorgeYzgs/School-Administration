@@ -5,13 +5,15 @@
  */
 package classes;
 
-import static classes.Method.formatter;
+import api.Method;
+import static api.Method.formatter;
+import database.DbExportData;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @since 2/1/2020
+ * @since 25/1/2020
  * @author George.Giazitzis
  * @version 1.1
  */
@@ -23,7 +25,7 @@ public class Student {
     private int tuitionFees;
     private List<Assignment> listOfStudentAssignments = new ArrayList();
     private static List<Student> listOfAllStudents = new ArrayList();
-    private static int count = 1000;
+    private static int count = 0;
     public final int ID;
 
     public Student(String firstName, String lastName, LocalDate dateOfBirth, int tuitionFees) {
@@ -36,7 +38,7 @@ public class Student {
     }
 
     //Constructor with user input.
-    private Student() {
+    public Student() {
         count++;
         this.ID = count;
         setFirstName();
@@ -47,7 +49,7 @@ public class Student {
 
     @Override
     public String toString() {
-        return String.format("%-15s%-15s%-15s$%-15s#%-15s", firstName, lastName, dateOfBirth.format(formatter), tuitionFees, ID);
+        return String.format("#%-15s%-15s%-15s%-15s$%-15s", ID, firstName, lastName, dateOfBirth.format(formatter), tuitionFees);
     }
 
     //Getters & Setters
@@ -110,7 +112,7 @@ public class Student {
         this.dateOfBirth = Method.inputLocalDate(LocalDate.of(1940, 01, 02), LocalDate.of(2002, 01, 02));
     }
 
-    public void setTuitionFees() {
+    protected void setTuitionFees() {
         System.out.println("Insert the student's tuition fees for the enrolled course");
         this.tuitionFees += Method.inputInteger(1000, 5000);
         System.out.println("The student's updated tuition fees are: " + this.tuitionFees + "$");
@@ -123,26 +125,8 @@ public class Student {
         } else {
             System.out.println(firstName + " " + lastName + ":");
             listOfStudentAssignments.add(new Assignment(assignment));
+            DbExportData.exportAssignmentsPerStudent(this, listOfStudentAssignments.get(listOfStudentAssignments.size() - 1));
             System.out.println("Assignment appointed to student successfully!\n");
         }
-    }
-
-    //A method to create students with user input.
-    public static void createStudents() {
-        System.out.println("How many Students would you like to create?");
-        int input = Method.inputInteger(1, 10);
-        for (int i = 0; i < input; i++) {
-            System.out.println("Student: " + (i + 1));
-            listOfAllStudents.add(new Student());
-            enrollStudent(listOfAllStudents.get(i));
-        }
-    }
-
-    //A method to enroll the student, after creation.
-    private static void enrollStudent(Student student) {
-        System.out.println("Choose the course(s) you would like to enroll the student in");
-        Method.printListOfCourses(Course.getListOfAllCourses());
-        Course.getListOfAllCourses().get(Method.inputInteger(1, Course.getListOfAllCourses().size()) - 1).addStudent(student);
-        Method.applyAgain(s -> enrollStudent(student));                         //Lambda with closure?
     }
 }

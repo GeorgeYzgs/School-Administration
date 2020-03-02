@@ -3,37 +3,54 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package classes;
+package api;
 
-import database.SyntheticData;
+import classes.*;
+import database.*;
+import java.sql.SQLException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Scanner;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 /**
- * @since 2/1/2020
+ * @since 25/1/2020
  * @author George.Giazitzis
  * @version 1.1
  */
 public abstract class Method {
 
-    static Scanner sc = new Scanner(System.in);
-    static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy").withResolverStyle(ResolverStyle.SMART);
+    public static Scanner sc = new Scanner(System.in);
+    public static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy").withResolverStyle(ResolverStyle.SMART);
 
     //A method to get a valid string with only alphabetic characters, with user input.
     public static String inputString(String name) {
-        System.out.println("Insert the " + name + ", your input must only contain alphabetic characters & must be 4 to 20 characters long!");
+        System.out.println("Insert the " + name + ", your input must only contain alphabetic characters (no spaces) & must be 4 to 30 characters long!");
         String input = sc.nextLine();
-        while (!input.matches("[a-zA-Z]{4,20}")) {
-            System.out.println("Invalid input, must only contain alphabetic characters & must be 4 to 20 characters long!");
+        while (!input.matches("[a-zA-Z]{4,30}")) {
+            System.out.println("Invalid input, must only contain alphabetic characters & must be 4 to 30 characters long!");
             input = sc.nextLine();
         }
         return input;
+    }
+
+    //A method to get a valid string with only alphabetic characters, with user input.
+    public static String inputTitleString(String name) {
+        System.out.println("Insert the " + name + ", your input must only contain alphanumeric characters & must be 4 to 30 characters long!");
+        String input = sc.nextLine();
+        while (!input.matches("[a-zA-Z0-9 #]+{4,30}")) {
+            System.out.println("Invalid input, cannot contain special characters & must be 4 to 30 characters long!");
+            input = sc.nextLine();
+        }
+        return input.trim();
     }
 
     //A method to get a valid integer, within a range of two given integers, with user input.
@@ -85,17 +102,16 @@ public abstract class Method {
     }
 
     //Introductory menu.
-    public static void run() {
-        System.out.println("Hello! Would you like to create your own date for our database or use the premade ones?"
+    private static void run() {
+        System.out.println("Hello! Would you like to create your own data for our database or use the premade ones?"
                 + "\n\"1\" to use premade data"
                 + "\n\"2\" to create your own data");
         loop:
         do {
-            String choice = sc.nextLine();
-            switch (choice) {
+            switch (sc.nextLine()) {
                 case "1":
                     System.out.println("Welcome to Coding Bootcamp 9 School Structure!");
-                    setPremadeData();
+                    retrieveLists();
                     break loop;
                 case "2":
                     System.out.println("Lets Create new data then!");
@@ -107,8 +123,22 @@ public abstract class Method {
         } while (true);
     }
 
-    //Methods to run for synthetic data
-    private static void setPremadeData() {
+    //Methods to import data from database.
+    public static void importData() {
+        try {
+            DbConnect.establishConnection();
+            DbConnect.importCourses(Course.getListOfAllCourses());
+            DbConnect.importTrainers(Trainer.getListOfAllTrainers());
+            DbConnect.importStudents(Student.getListOfAllStudents());
+            DbConnect.importAssignments(Assignment.getListOfAllAssignments());
+            run();
+        } catch (SQLException ex) {
+            System.out.printf("Unable to retrieve data, %s", ex.getMessage());
+        }
+    }
+
+    //Methods to run for synthetic data, not used for Project part B.
+    private static void setPremadeData() throws SQLException {
         SyntheticData.setPremadeCourses();
         SyntheticData.setPremadeTrainers();
         SyntheticData.setPremadeStudents();
@@ -118,10 +148,10 @@ public abstract class Method {
 
     //Methods to run for user input date.
     private static void createData() {
-        Course.createCourses();
-        Trainer.createTrainers();
-        Student.createStudents();
-        Assignment.createAssignments();
+        CreateData.createCourses();
+        CreateData.createTrainers();
+        CreateData.createStudents();
+        CreateData.createAssignments();
         retrieveLists();
     }
 
@@ -131,8 +161,7 @@ public abstract class Method {
                 + "\nInsert \"1\" for yes or \"2\" for no");
         loop:
         do {
-            String answer = sc.nextLine();
-            switch (answer) {
+            switch (sc.nextLine()) {
                 case "1":
                     consumer.accept((T) consumer);
                     break loop;
@@ -146,6 +175,7 @@ public abstract class Method {
 
     //Main menu.
     private static void retrieveLists() {
+        DbConnect.terminateConnection();
         loop:
         do {
             System.out.println("-------------------------------------------------------------------------------------------"
@@ -162,22 +192,21 @@ public abstract class Method {
                     + "\n\"10\" to insert a date and check which students have to submit an assignment in that week"
                     + "\n\"end\" when you are finished!"
                     + "\n-------------------------------------------------------------------------------------------");
-            String choice = sc.nextLine();
-            switch (choice) {
+            switch (sc.nextLine()) {
                 case "1":
-                    System.out.format("%-15s%-15s%-15s%-15s%-15s\n", "First Name", "Last Name", "Date of Birth", "Tuition Fees", "Student ID");
+                    System.out.format("%-15s%-15s%-15s%-15s%-15s\n", "Student ID", "First Name", "Last Name", "Date of Birth", "Tuition Fees");
                     Student.getListOfAllStudents().forEach(System.out::println);
                     break;
                 case "2":
-                    System.out.format("%-15s%-15s%-15s\n", "First Name", "Last Name", "Subject");
+                    System.out.format("%-15s%-15s%-15s%-15s\n", "Trainer ID", "First Name", "Last Name", "Subject");
                     Trainer.getListOfAllTrainers().forEach(System.out::println);
                     break;
                 case "3":
-                    System.out.format("%-25s%-25s%-15s%-15s%-15s\n", "Title", "Description", "Oral Mark", "Total Mark", "Sub Date");
+                    System.out.format("%-15s%-25s%-25s%-15s%-15s%-15s\n", "Assignment ID", "Title", "Description", "Oral Mark", "Total Mark", "Sub Date");
                     Assignment.getListOfAllAssignments().forEach(System.out::println);
                     break;
                 case "4":
-                    System.out.format("%-25s%-15s%-15s%-15s%-15s\n", "Title", "Stream", "Type", "Start Date", "End Date");
+                    System.out.format("%-15s%-25s%-15s%-15s%-15s%-15s\n", "Course ID", "Title", "Stream", "Type", "Start Date", "End Date");
                     Course.getListOfAllCourses().forEach(System.out::println);
                     break;
                 case "5":
@@ -202,11 +231,11 @@ public abstract class Method {
                     break loop;
                 case "9":
                     System.out.println("Here is a list of the students that have enrolled in more than one course :");
-                    Course.showStudentsInMultipleCourses();
+                    showStudentsInMultipleCourses();
                     break;
                 case "10":
                     System.out.println("Lets find the Students that have submit an assignment on a given week");
-                    Course.findStudentAssignment();
+                    findStudentAssignment();
                     break;
                 case "end":
                     System.out.println("Thank you for your time!");
@@ -218,7 +247,7 @@ public abstract class Method {
     }
 
     //A method to browse lists , with lambda expression!
-    private static <T> void browseLists(String name, List<T> list, IntConsumer lambda) {    //used java.util.functions IntConsumer that takes and int and returns void,so we dont have to create a functional interface.
+    private static <T> void browseLists(String name, List<T> list, IntConsumer lambda) {    //used java.util.functions IntConsumer
         do {
             if (list.containsAll(Course.getListOfAllCourses())) {
                 printListOfCourses((List<Course>) list);
@@ -248,40 +277,64 @@ public abstract class Method {
         } while (true);
     }
 
+    //A method to display all the students that have enrolled in more than 1 course.
+    private static void showStudentsInMultipleCourses() {
+        Student.getListOfAllStudents().forEach(s -> {
+            long count = Course.getListOfAllCourses().stream().filter(c -> c.getListOfCourseStudents().contains(s)).count();
+            if (count >= 2) {
+                System.out.println(s.getFirstName() + " " + s.getLastName() + " ID #" + s.ID);
+                Course.getListOfAllCourses().stream().filter(c -> c.getListOfCourseStudents().contains(s)).forEach(System.out::println);
+            }
+        });
+    }
+
+    //A method to display the students that have to submit an assignment on a given date, with user input.
+    private static void findStudentAssignment() {
+        LocalDate date = Method.inputLocalDate(LocalDate.of(2010, 01, 02), LocalDate.of(2030, 01, 02));
+        if (date.getDayOfWeek().getValue() == 7 || date.getDayOfWeek().getValue() == 6) {
+            date = date.with(TemporalAdjusters.previous(DayOfWeek.FRIDAY));
+        }
+        LocalDateTime dateTime = LocalDateTime.of(date, LocalTime.of(23, 59, 59));
+        System.out.println("Student(s) that have to submit an assignment from Monday: "
+                + date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                + " to Friday : " + date.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY)) + "\n");
+        Course.getListOfAllCourses().forEach(c -> {
+            c.getListOfCourseAssignments().forEach(a -> {
+                if (a.getSubDateTime().isAfter(dateTime.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)))
+                        && a.getSubDateTime().isBefore(dateTime.with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY)))) {
+                    System.out.println(a);
+                    Method.printListOfStudents(c.getListOfCourseStudents());
+                }
+            });
+        });
+    }
+
     //Methods to print full lists and course lists, because toString looks bad.
-    public static void printListOfStudents(List<Student> studentList) {
-        System.out.println("-------------------------------------------------------------------------------------------");
-        System.out.format("%-5s%-15s%-15s%-15s%-15s%-15s\n", "No", "First Name", "Last Name", "Date of Birth", "Tuition Fees", "Student ID");
-        for (int i = 0; i < studentList.size(); i++) {
-            System.out.format("%-5s%s\n", (i + 1), studentList.get(i));
-        }
-        System.out.println("-------------------------------------------------------------------------------------------");
-    }
-
-    public static void printListOfTrainers(List<Trainer> trainerList) {
-        System.out.println("-------------------------------------------------------------------------------------------");
-        System.out.format("%-5s%-15s%-15s%-15s\n", "No", "First Name", "Last Name", "Subject");
-        for (int i = 0; i < trainerList.size(); i++) {
-            System.out.format("%-5s%s\n", (i + 1), trainerList.get(i));
-        }
-        System.out.println("-------------------------------------------------------------------------------------------");
-    }
-    
-    public static void printListOfAssignments(List<Assignment> assignmentList) {
-        System.out.println("-------------------------------------------------------------------------------------------");
-        System.out.format("%-5s%-25s%-25s%-15s%-15s%-15s\n", "No", "Title", "Description", "Oral Mark", "Total Mark", "Sub Date");
-        for (int i = 0; i < assignmentList.size(); i++) {
-            System.out.format("%-5s%s\n", (i + 1), assignmentList.get(i));
-        }
-        System.out.println("-------------------------------------------------------------------------------------------");
-    }
-
     public static void printListOfCourses(List<Course> courseList) {
         System.out.println("-------------------------------------------------------------------------------------------");
-        System.out.format("%-5s%-25s%-15s%-15s%-15s%-15s\n", "No", "Title", "Stream", "Type", "Start Date", "End Date");
-        for (int i = 0; i < courseList.size(); i++) {
-            System.out.format("%-5s%s\n", (i + 1), courseList.get(i));
-        }
+        System.out.format("%-15s%-25s%-15s%-15s%-15s%-15s\n", "Course ID", "Title", "Stream", "Type", "Start Date", "End Date");
+        courseList.forEach(System.out::println);
+        System.out.println("-------------------------------------------------------------------------------------------");
+    }
+
+    private static void printListOfStudents(List<Student> studentList) {
+        System.out.println("-------------------------------------------------------------------------------------------");
+        System.out.format("%-15s%-15s%-15s%-15s%-15s\n", "Student ID", "First Name", "Last Name", "Date of Birth", "Tuition Fees");
+        studentList.forEach(System.out::println);
+        System.out.println("-------------------------------------------------------------------------------------------");
+    }
+
+    private static void printListOfTrainers(List<Trainer> trainerList) {
+        System.out.println("-------------------------------------------------------------------------------------------");
+        System.out.format("%-15s%-15s%-15s%-15s\n", "Trainer ID", "First Name", "Last Name", "Subject");
+        trainerList.forEach(System.out::println);
+        System.out.println("-------------------------------------------------------------------------------------------");
+    }
+
+    private static void printListOfAssignments(List<Assignment> assignmentList) {
+        System.out.println("-------------------------------------------------------------------------------------------");
+        System.out.format("%-15s%-25s%-25s%-15s%-15s%-15s\n", "Assignment ID", "Title", "Description", "Oral Mark", "Total Mark", "Sub Date");
+        assignmentList.forEach(System.out::println);
         System.out.println("-------------------------------------------------------------------------------------------");
     }
 }

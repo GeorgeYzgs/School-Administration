@@ -5,18 +5,17 @@
  */
 package classes;
 
-import static classes.Method.formatter;
-import static classes.Method.sc;
+import api.Method;
+import static api.Method.formatter;
+import database.DbExportData;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @since 2/1/2020
+ * @since 25/1/2020
  * @author George.Giazitzis
  * @version 1.1
  */
@@ -31,8 +30,12 @@ public class Course {
     private List<Student> listOfCourseStudents = new ArrayList();
     private List<Assignment> listOfCourseAssignments = new ArrayList();
     private List<Trainer> listOfCourseTrainers = new ArrayList();
+    private static int count = 0;
+    public final int ID;
 
     public Course(String title, String stream, String type, LocalDate startDate, LocalDate endDate) {
+        count++;
+        this.ID = count;
         this.title = title;
         this.stream = stream;
         this.type = type;
@@ -42,6 +45,8 @@ public class Course {
 
     //Constructor with user input.
     public Course() {
+        count++;
+        this.ID = count;
         setTitle();
         setStream();
         setType();
@@ -51,7 +56,7 @@ public class Course {
 
     @Override
     public String toString() {
-        return String.format("%-25s%-15s%-15s%-15s%-15s", title, stream, type, startDate.format(formatter), endDate.format(formatter));
+        return String.format("#%-15s%-25s%-15s%-15s%-15s%-15s", ID, title, stream, type, startDate.format(formatter), endDate.format(formatter));
     }
 
     //Getters & Setters
@@ -123,13 +128,11 @@ public class Course {
 
     //Overloaded setters for course creation, with user input.
     private void setTitle() {
-        System.out.println("Insert the course's title");
-        this.title = sc.nextLine().trim();
+        this.title = Method.inputTitleString("course's title");
     }
 
     private void setStream() {
-        System.out.println("Insert the course's stream");
-        this.stream = sc.nextLine().trim();
+        this.stream = Method.inputString("course's stream");
     }
 
     private void setType() {
@@ -156,16 +159,6 @@ public class Course {
         this.endDate = date;
     }
 
-    //A method to create courses, with user input.
-    public static void createCourses() {
-        System.out.println("How many courses would you like to create?");
-        int input = Method.inputInteger(1, 10);
-        for (int i = 0; i < input; i++) {
-            System.out.println("Course: " + (i + 1));
-            listOfAllCourses.add(new Course());
-        }
-    }
-
     //A method to enroll a student to a course & update his tuition fees.
     public void addStudent(Student student) {
         if (listOfCourseStudents.contains(student)) {
@@ -174,6 +167,8 @@ public class Course {
             listOfCourseStudents.add(student);
             System.out.println("Student enrolled successfully!");
             student.setTuitionFees();
+            DbExportData.exportUpdatedStudentFees(student);
+            DbExportData.exportStudentsPerCoruse(this, student);
         }
     }
 
@@ -183,6 +178,7 @@ public class Course {
             System.out.println("Trainer is already teaching in this course");
         } else {
             listOfCourseTrainers.add(trainer);
+            DbExportData.exportTrainersPerCourse(this, trainer);
             System.out.println("Trainer hired successfully!");
         }
     }
@@ -195,38 +191,7 @@ public class Course {
             listOfCourseAssignments.add(assignment);
             System.out.println("Assignment appointed to course successfully!");
             assignment.setSubDateTime(startDate, endDate);
+            DbExportData.exportAssignments(this, assignment);
         }
-    }
-
-    //A method to display all the students that have enrolled in more than 1 course.
-    public static void showStudentsInMultipleCourses() {
-        Student.getListOfAllStudents().forEach(s -> {                           //Behold, the beauty of lambdas.
-            long count = listOfAllCourses.stream().filter(c -> c.listOfCourseStudents.contains(s)).count();
-            if (count >= 2) {
-                System.out.println(s.getFirstName() + " " + s.getLastName() + " #" + s.ID);
-                listOfAllCourses.stream().filter(c -> c.listOfCourseStudents.contains(s)).forEach(System.out::println);
-            }
-        });
-    }
-
-    //A method to display the students that have to submit an assignment on a given date, with user input.
-    public static void findStudentAssignment() {
-        LocalDate date = Method.inputLocalDate(LocalDate.of(2010, 01, 02), LocalDate.of(2030, 01, 02));
-        if (date.getDayOfWeek().getValue() == 7 || date.getDayOfWeek().getValue() == 6) {
-            date = date.with(TemporalAdjusters.previous(DayOfWeek.FRIDAY));
-        }
-        LocalDateTime dateTime = LocalDateTime.of(date, LocalTime.of(23, 59, 59));
-        System.out.println("Student(s) that have to submit an assignment from Monday: "
-                + date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                + " to Friday : " + date.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY)) + "\n");
-        listOfAllCourses.forEach(c -> {
-            c.listOfCourseAssignments.forEach(a -> {
-                if (a.getSubDateTime().isAfter(dateTime.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)))
-                        && a.getSubDateTime().isBefore(dateTime.with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY)))) {
-                    System.out.println(a);
-                    Method.printListOfStudents(c.listOfCourseStudents);
-                }
-            });
-        });
     }
 }

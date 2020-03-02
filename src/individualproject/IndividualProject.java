@@ -5,10 +5,10 @@
  */
 package individualproject;
 
-import classes.Method;
+import api.Method;
 
 /**
- * @since 2/1/2020
+ * @since 25/1/2020
  * @author George.Giazitzis
  * @version 1.1
  */
@@ -18,6 +18,6 @@ public class IndividualProject {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        Method.run();
+        Method.importData();
     }
 }
